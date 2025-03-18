@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import joblib
 import numpy as np
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # โหลดโมเดล, Scaler, และ PCA
 knn = joblib.load("models/knn_model.pkl")
@@ -11,6 +12,15 @@ label_encoder = joblib.load("models/label_encoder.pkl")  # โหลด LabelEnc
 
 # สร้าง FastAPI app
 app = FastAPI()
+
+# อนุญาตทุก Origins (ทุก Domain)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # ถ้าเป็น production ควรกำหนด origin ที่เฉพาะเจาะจง
+    allow_credentials=True,
+    allow_methods=["*"],  # อนุญาตทุก Methods (GET, POST, PUT, DELETE ฯลฯ)
+    allow_headers=["*"],  # อนุญาตทุก Headers
+)
 
 # สร้าง Data Model สำหรับรับข้อมูล
 class InputData(BaseModel):
