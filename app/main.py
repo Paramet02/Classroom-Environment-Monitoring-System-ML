@@ -5,10 +5,12 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 # โหลดโมเดล, Scaler, และ PCA
-knn = joblib.load("models/knn_model.pkl")
+knn = joblib.load("models/model.pkl")
 scaler = joblib.load("models/scaler.pkl")
 pca = joblib.load("models/pca.pkl")
-label_encoder = joblib.load("models/label_encoder.pkl")  # โหลด LabelEncoder ด้วย
+knn2 = joblib.load("models/model2.pkl")
+scaler2 = joblib.load("models/scaler2.pkl")
+pca2= joblib.load("models/pca2.pkl")
 
 # สร้าง FastAPI app
 app = FastAPI()
@@ -48,8 +50,30 @@ def predict(data: InputData):
         prediction = knn.predict(input_pca)
 
         # แปลงผลลัพธ์จากตัวเลขเป็น AQI bucket
-        predicted_aqi_bucket = label_encoder.inverse_transform([prediction])[0]
 
-        return {"prediction": str(predicted_aqi_bucket)}  # ส่งผลลัพธ์กลับไป
+
+        return {"prediction": str(prediction)}  # ส่งผลลัพธ์กลับไป
+    except Exception as e:
+        return {"error": str(e)}    
+    
+@app.post("/predict-2")
+def predict(data: InputData):
+    try:
+        print("Received data:", data.features)  
+
+        # แปลงข้อมูลเป็น NumPy array
+        input_data = np.array(data.features).reshape(1, -1)
+        
+        # Standardize ข้อมูลด้วย Scaler
+        input_scaled = scaler2.transform(input_data)
+        
+        # ลดมิติข้อมูลด้วย PCA
+        input_pca = pca2.transform(input_scaled)
+        
+        # ทำนายผลด้วย KNN
+        prediction = knn2.predict(input_pca)
+
+
+        return {"prediction": str(prediction)}  # ส่งผลลัพธ์กลับไป
     except Exception as e:
         return {"error": str(e)}
